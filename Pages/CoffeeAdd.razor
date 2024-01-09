@@ -1,0 +1,208 @@
+﻿@page "/coffee"
+
+<nav class="navbar navbar-light bg-light justify-content-between">
+    <h1 class="navbar-brand mb-0 h1">Coffees</h1>
+    <button class="btn btn-primary" type="button" @onclick="OpenAddCoffeeDialog">
+        <span class="oi oi-plus" /> Add
+    </button>
+</nav>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Coffee Name</th>
+            <th>Price</th>
+           
+            
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var coffee in _coffees)
+        {
+            <tr>
+                <td>@coffee.CoffeeName</td>
+                <td>@coffee.Price.ToString()</td>
+               
+                
+                <td>
+                    <button
+                    class="btn btn-outline-danger" type="button" @onclick="()=>OpenDeleteCoffeeDialog(coffee)">
+                        <span class="oi oi-delete" /> Delete
+                    </button>
+
+                    <button 
+                    class="btn btn-outline-danger" type="button" @onclick="()=>OpenUpdateCoffeeDialog(coffee)">
+                        <span class="oi oi-delete" /> Update
+                    </button>
+                </td>
+
+
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (_showAddCoffeeDialog)
+{
+    <ModalDialog Title="Add Coffee" OnClose="@OnAddCoffeeDialogClose" OkLabel="Add">
+    <form>
+        <div class="form-floating">
+            <input type="text" class="form-control coffeename" @bind="_coffeename" placeholder="Coffeename" />
+            <label for="floatingInput">Coffeename</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control price" @bind="_price" placeholder="Price" />
+            <label for="floatingPrice">Price</label>
+        </div>
+        
+       
+        @if (!string.IsNullOrEmpty(_addCoffeeErrorMessage))
+            {
+                <AlertMessage Type="danger" Message="@_addCoffeeErrorMessage" />
+            }
+        </form>
+    </ModalDialog>
+}
+
+@if (_showUpdateCoffeeDialog)
+{
+    <ModalDialog Title="Update Coffee" OnClose="@OnUpdateCoffeeDialogClose" OkLabel="Update">
+    <form>
+        <div class="form-floating">
+            <input type="text" class="form-control username" @bind="_updateCoffee.CoffeeName" placeholder="Coffeename" />
+            <label for="floatingInput">Coffeename</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control password" @bind="_updateCoffee.Price" placeholder="Price" />
+            <label for="floatingPassword">Password</label>
+        </div>
+        
+        @if (!string.IsNullOrEmpty(_addCoffeeErrorMessage))
+            {
+                <AlertMessage Type="danger" Message="@_addCoffeeErrorMessage" />
+            }
+        </form>
+    </ModalDialog>
+}
+
+
+@if (_showDeleteCoffeeDialog)
+{
+    <ModalDialog Title="Delete Coffee" OnClose="@OnDeleteCoffeeDialogClose" OkLabel="Confirm">
+    <p>Are you sure you want to delete <strong>@_deleteCoffee.CoffeeName</strong> coffee and their data?</p>
+    @if (!string.IsNullOrEmpty(_deleteCoffeeErrorMessage))
+        {
+            <AlertMessage Type="danger" Message="@_deleteCoffeeErrorMessage" />
+        }
+    </ModalDialog>
+}
+
+@code {
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+    private List<Coffee> _coffees { get; set; }
+    private bool _showAddCoffeeDialog { get; set; }
+    private bool _showDeleteCoffeeDialog { get; set; }
+    private string _addCoffeeErrorMessage { get; set; }
+    private string _deleteCoffeeErrorMessage { get; set; }
+    private Coffee _deleteCoffee { get; set; }
+    private string _coffeename { get; set; }
+    private float _price { get; set; }
+
+    private bool _showUpdateCoffeeDialog { get; set; }
+    private string _updateCoffeeErrorMessage { get; set; }
+    private Coffee _updateCoffee { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _coffees = CoffeeService.GetAll();
+    }
+
+    private void OpenAddCoffeeDialog()
+    {
+        _showAddCoffeeDialog = true;
+        _coffeename = "";
+        _price = 0;
+        
+    }
+    private void OnAddCoffeeDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+
+            _showAddCoffeeDialog = false;
+        }
+        else
+        {
+            try
+            {
+                _addCoffeeErrorMessage = "";
+                _coffees = CoffeeService.Create( _coffeename, _price);
+                _showAddCoffeeDialog = false;
+            }
+            catch (Exception e)
+            {
+                _addCoffeeErrorMessage = e.Message;
+            }
+        }
+    }
+
+
+    private void OpenDeleteCoffeeDialog(Coffee coffee)
+    {
+        _deleteCoffee = coffee;
+        _showDeleteCoffeeDialog = true;
+    }
+    private void OnDeleteCoffeeDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+
+            _showDeleteCoffeeDialog = false;
+            _deleteCoffee = null;
+        }
+        else
+        {
+            try
+            {
+                _deleteCoffeeErrorMessage = "";
+                _coffees = CoffeeService.Delete(_deleteCoffee.Id);
+                _showDeleteCoffeeDialog = false;
+                _deleteCoffee = null;
+            }
+            catch (Exception e)
+            {
+                _deleteCoffeeErrorMessage = e.Message;
+            }
+        }
+
+    }
+    private void OpenUpdateCoffeeDialog(Coffee coffee)
+    {
+        _showUpdateCoffeeDialog = true;
+        _updateCoffee = coffee;
+    }
+       
+
+    private void OnUpdateCoffeeDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+
+            _showUpdateCoffeeDialog = false;
+        }
+        else
+        {
+            try
+            {
+                _updateCoffeeErrorMessage = "";
+                _coffees = CoffeeService.Update( _updateCoffee.CoffeeName, _updateCoffee.Price );
+                _showUpdateCoffeeDialog = false;
+            }
+            catch (Exception e)
+            {
+                _updateCoffeeErrorMessage = e.Message;
+            }
+        }
+    }
+}

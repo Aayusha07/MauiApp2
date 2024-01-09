@@ -1,0 +1,228 @@
+﻿@page "/member"
+
+<nav class="navbar navbar-light bg-light justify-content-between">
+    <h1 class="navbar-brand mb-0 h1">Members</h1>
+    <button class="btn btn-primary" type="button" @onclick="OpenAddMemberDialog">
+        <span class="oi oi-plus" /> Add
+    </button>
+</nav>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Member name</th>
+            <th>User Name</th>
+            <th>Phone Number</th>
+            
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var member in _members)
+        {
+            <tr>
+                <td>@member.Name</td>
+                <td>@member.Username</td>
+                <td>@member.PhoneNumber</td>
+                
+                <td>
+                    <button 
+                    class="btn btn-outline-danger" type="button" @onclick="()=>OpenDeleteMemberDialog(member)">
+                        <span class="oi oi-delete" /> Delete
+                    </button>
+
+                    <button 
+                    class="btn btn-outline-danger" type="button" @onclick="()=>OpenUpdateMemberDialog(member)">
+                        <span class="oi oi-delete" /> Update
+                    </button>
+                </td>
+
+
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (_showAddMemberDialog)
+{
+    <ModalDialog Title="Add Member" OnClose="@OnAddMemberDialogClose" OkLabel="Add">
+    <form>
+        <div class="form-floating">
+            <input type="text" class="form-control membername" @bind="_membername" placeholder="membername" />
+            <label for="floatingInput">Membername</label>
+        </div>
+
+        <div class="form-floating">
+            <input type="text" class="form-control username" @bind="_username" placeholder="username" />
+            <label for="floatingInput">User name</label>
+        </div>
+
+            <div class="form-floating">
+                <input type="text" class="form-control phonenumber" @bind="_phonenumber" placeholder="phonenumber" />
+                <label for="floatingInput">Phone number</label>
+            </div>
+
+
+        
+
+        
+        
+        
+        @if (!string.IsNullOrEmpty(_addMemberErrorMessage))
+            {
+                <AlertMessage Type="danger" Message="@_addMemberErrorMessage" />
+            }
+        </form>
+    </ModalDialog>
+}
+
+@if (_showUpdateMemberDialog)
+{
+    <ModalDialog Title="Update Member" OnClose="@OnUpdateMemberDialogClose" OkLabel="Update">
+    <form>
+        <div class="form-floating">
+            <input type="text" class="form-control membername" @bind="_updateMember.Name" placeholder="Member name" />
+            <label for="floatingInput">Membername</label>
+        </div>
+
+            <div class="form-floating">
+                <input type="text" class="form-control username" @bind="_updateMember.Username" placeholder="username" />
+                <label for="floatingInput">User name</label>
+            </div>
+
+            <div class="form-floating">
+                <input type="text" class="form-control phonenumber" @bind="_updateMember.PhoneNumber" placeholder="phonenumber" />
+                <label for="floatingInput">Phone number</label>
+            </div>
+       
+        
+        @if (!string.IsNullOrEmpty(_addMemberErrorMessage))
+            {
+                <AlertMessage Type="danger" Message="@_addMemberErrorMessage" />
+            }
+        </form>
+    </ModalDialog>
+}
+
+
+@if (_showDeleteMemberDialog)
+{
+    <ModalDialog Title="Delete Member" OnClose="@OnDeleteMemberDialogClose" OkLabel="Confirm">
+    <p>Are you sure you want to delete <strong>@_deleteMember.Name</strong> member and their data?</p>
+    @if (!string.IsNullOrEmpty(_deleteMemberErrorMessage))
+        {
+            <AlertMessage Type="danger" Message="@_deleteMemberErrorMessage" />
+        }
+    </ModalDialog>
+}
+
+@code {
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+    private List<Member> _members { get; set; }
+    private bool _showAddMemberDialog { get; set; }
+    private bool _showDeleteMemberDialog { get; set; }
+    private string _addMemberErrorMessage { get; set; }
+    private string _deleteMemberErrorMessage { get; set; }
+    private Member _deleteMember { get; set; }
+    private string _membername { get; set; }
+    private string _username { get; set; }
+    private string _phonenumber { get; set; }
+
+
+    private bool _showUpdateMemberDialog { get; set; }
+    private string _updateMemberErrorMessage { get; set; }
+    private Member _updateMember { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _members = MembersService.GetAll();
+    }
+
+    private void OpenAddMemberDialog()
+    {
+        _showAddMemberDialog = true;
+        _membername = "";
+        _username = "";
+        _phonenumber = "";
+    }
+    private void OnAddMemberDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+
+            _showAddMemberDialog = false;
+        }
+        else
+        {
+            try
+            {
+                _addMemberErrorMessage = "";
+                _members = MembersService.Create(_username, _membername, _phonenumber );
+                _showAddMemberDialog = false;
+            }
+            catch (Exception e)
+            {
+                _addMemberErrorMessage = e.Message;
+            }
+        }
+    }
+
+    
+    private void OpenDeleteMemberDialog(Member member)
+    {
+        _deleteMember = member;
+        _showDeleteMemberDialog = true;
+    }
+    private void OnDeleteMemberDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+
+            _showDeleteMemberDialog = false;
+            _deleteMember = null;
+        }
+        else
+        {
+            try
+            {
+                _deleteMemberErrorMessage = "";
+                _members = MembersService.Delete(_deleteMember.Id);
+                _showDeleteMemberDialog = false;
+                _deleteMember = null;
+            }
+            catch (Exception e)
+            {
+                _deleteMemberErrorMessage = e.Message;
+            }
+        }
+
+    }
+    private void OpenUpdateMemberDialog(Member member)
+    {
+        _showUpdateMemberDialog = true;
+        _updateMember = member;
+        
+}
+
+    private void OnUpdateMemberDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+
+            _showUpdateMemberDialog = false;
+        }
+        else
+        {
+            try
+            {
+                _updateMemberErrorMessage = "";
+                _members = MembersService.Update(_updateMember.Name, _updateMember.Username, _updateMember.PhoneNumber);
+                _showUpdateMemberDialog = false;
+            }
+            catch (Exception e)
+            {
+                _updateMemberErrorMessage = e.Message;
+            }
+        }
+    }
+}

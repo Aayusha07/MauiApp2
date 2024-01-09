@@ -1,0 +1,209 @@
+﻿@page "/addins"
+
+<nav class="navbar navbar-light bg-light justify-content-between">
+    <h1 class="navbar-brand mb-0 h1">CoffeeAddIns</h1>
+    <button class="btn btn-primary" type="button" @onclick="OpenAddAddInsDialog">
+        <span class="oi oi-plus" /> Add
+    </button>
+</nav>
+<table class="table">
+    <thead>
+        <tr>
+            <th>AddIns Name</th>
+            <th>Price</th>
+           
+            
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var addin in _addins)
+        {
+            <tr>
+                <td>@addin.AddInsName</td>
+                <td>@addin.Price.ToString()</td>
+               
+                
+                <td>
+                    <button
+                    class="btn btn-outline-danger" type="button" @onclick="()=>OpenDeleteAddInsDialog(addin)">
+                        <span class="bi bi-trash-fill" /> Delete
+                    </button>
+
+                    <button 
+                    class="btn btn-outline-danger" type="button" @onclick="()=>OpenUpdateAddInsDialog(addin)">
+                        <span class="bi bi-pencil" /> Update
+                    </button>
+                </td>
+
+
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (_showAddAddInsDialog)
+{
+    <ModalDialog Title="Add AddIns" OnClose="@OnAddAddInsDialogClose" OkLabel="Add">
+    <form>
+        <div class="form-floating">
+            <input type="text" class="form-control AddInsname" @bind="_addinsname" placeholder="AddInsname" />
+            <label for="floatingInput">AddInsname</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control password" @bind="_price" placeholder="Price" />
+            <label for="floatingPrice">Price</label>
+        </div>
+        
+       
+        @if (!string.IsNullOrEmpty(_addAddInsErrorMessage))
+            {
+                <AlertMessage Type="danger" Message="@_addAddInsErrorMessage" />
+            }
+        </form>
+    </ModalDialog>
+}
+
+@if (_showUpdateAddInsDialog)
+{
+    <ModalDialog Title="Update AddIns" OnClose="@OnUpdateAddInsDialogClose" OkLabel="Update">
+    <form>
+        <div class="form-floating">
+            <input type="text" class="form-control username" @bind="_updateAddIns.AddInsName" placeholder="AddInname" />
+            <label for="floatingInput">AddInname</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control password" @bind="_updateAddIns.Price" placeholder="Price" />
+            <label for="floatingPassword">AddIns</label>
+        </div>
+        
+        @if (!string.IsNullOrEmpty(_addAddInsErrorMessage))
+            {
+                <AlertMessage Type="danger" Message="@_addAddInsErrorMessage" />
+            }
+        </form>
+    </ModalDialog>
+}
+
+
+@if (_showDeleteAddInsDialog)
+{
+    <ModalDialog Title="Delete AddIns" OnClose="@OnDeleteAddInsDialogClose" OkLabel="Confirm">
+    <p>Are you sure you want to delete <strong>@_deleteAddIns.AddInsName</strong> Add Ins and their data?</p>
+    @if (!string.IsNullOrEmpty(_deleteAddInsErrorMessage))
+        {
+            <AlertMessage Type="danger" Message="@_deleteAddInsErrorMessage" />
+        }
+    </ModalDialog>
+}
+
+@code {
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+    private List<AddIns> _addins { get; set; }
+    private bool _showAddAddInsDialog { get; set; }
+    private bool _showDeleteAddInsDialog { get; set; }
+    private string _addAddInsErrorMessage { get; set; }
+    private string _deleteAddInsErrorMessage { get; set; }
+    private AddIns _deleteAddIns { get; set; }
+    private string _addinsname { get; set; }
+    private float _price { get; set; }
+
+    private bool _showUpdateAddInsDialog { get; set; }
+    private string _updateAddInsErrorMessage { get; set; }
+    private AddIns _updateAddIns { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _addins = AddInsService.GetAll();
+    }
+
+    private void OpenAddAddInsDialog()
+    {
+        _showAddAddInsDialog = true;
+        _addinsname = "";
+        _price = 0;
+        
+    }
+    private void OnAddAddInsDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+
+            _showAddAddInsDialog = false;
+        }
+        else
+        {
+            try
+            {
+                _addAddInsErrorMessage = "";
+                _addins = AddInsService.Create( _addinsname, _price);
+                _showAddAddInsDialog = false;
+            }
+            catch (Exception e)
+            {
+                _addAddInsErrorMessage = e.Message;
+            }
+        }
+    }
+
+
+    private void OpenDeleteAddInsDialog(AddIns addin)
+    {
+        _deleteAddIns = addin;
+        _showDeleteAddInsDialog = true;
+    }
+    private void OnDeleteAddInsDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+
+            _showDeleteAddInsDialog = false;
+            _deleteAddIns = null;
+        }
+        else
+        {
+            try
+            {
+                _deleteAddInsErrorMessage = "";
+                _addins = AddInsService.Delete(_deleteAddIns.Id);
+                _showDeleteAddInsDialog = false;
+                _deleteAddIns = null;
+            }
+            catch (Exception e)
+            {
+                _deleteAddInsErrorMessage = e.Message;
+            }
+        }
+
+    }
+    private void OpenUpdateAddInsDialog(AddIns addin)
+    {
+        _showUpdateAddInsDialog = true;
+        _updateAddIns = addin;
+    }
+       
+
+    private void OnUpdateAddInsDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+
+            _showUpdateAddInsDialog = false;
+        }
+        else
+        {
+            try
+            {
+                _updateAddInsErrorMessage = "";
+                _addins =AddInsService.Update( _updateAddIns.AddInsName, _updateAddIns.Price );
+                _showUpdateAddInsDialog = false;
+            }
+            catch (Exception e)
+            {
+                _updateAddInsErrorMessage = e.Message;
+            }
+        }
+    }
+}
+
