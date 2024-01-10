@@ -12,6 +12,6 @@ namespace MauiApp2.Data
         public string CoffeeName { get; set; }
         public float Price { get; set; }
 
-        
+        public int Quantity { get; set; } = 0;
     }
 }

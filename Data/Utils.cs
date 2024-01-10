@@ -74,6 +74,11 @@ namespace MauiApp2.Data
         {
             return Path.Combine(GetAppDirectoryPath(), "members.json");
         }
+
+        public static string GetAppOrderFilePath()
+        {
+            return Path.Combine(GetAppDirectoryPath(), "orders.json");
+        }
     }
 }
 

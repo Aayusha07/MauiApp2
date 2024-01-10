@@ -6,12 +6,18 @@ using System.Threading.Tasks;
 
 namespace MauiApp2.Data
 {
-    public class AddIns
+    public class Order
     {
         public Guid Id { get; set; } = Guid.NewGuid();
-        public string AddInsName { get; set; }
+        public  List<Coffee>? coffee { get; set; }
+
+        public List<AddIns>? addIns { get; set; }
         public float Price { get; set; }
 
-        public int Quantity { get; set; } = 0;
+       
+
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        public string Description { get; set; }
     }
 }

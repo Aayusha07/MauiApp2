@@ -1,0 +1,373 @@
+﻿@page "/orders"
+
+<nav class="navbar navbar-light bg-light justify-content-between">
+    <h1 class="navbar-brand mb-0 h1">Coffees</h1>
+    <button class="btn btn-primary" type="button" @onclick="OpenAddOrderDialog">
+        <span class="oi oi-plus" /> Order
+    </button>
+</nav>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Created At</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var order in _orders)
+        {
+            <tr>
+                <td>@order.CreatedAt</td>
+                <td>@order.Description</td>
+                <td>@order.Price</td>
+              
+
+                <td>
+                    <button class="btn btn-outline-danger" type="button" @onclick="()=>OpenDeleteOrderDialog(order)">
+                        <span class="oi oi-delete" /> Delete
+                    </button>
+
+                    <button class="btn btn-outline-danger" type="button" @onclick="()=>OpenUpdateOrderDialog(order)">
+                        <span class="oi oi-delete" /> Update
+                    </button>
+
+                    <button class="btn btn-outline-danger" type="button" @onclick="()=>OpenItemDialog(order)">
+                        <span class="oi oi-delete" /> Add Item
+                    </button>
+                    <button class="btn btn-outline-danger" type="button" @onclick="()=>OpenAddInDialog(order)">
+                        <span class="oi oi-delete" /> Add Add In
+                    </button>
+                </td>
+
+
+
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (_showAddOrderDialog)
+{
+    <ModalDialog Title="Add Order" OnClose="@OnAddOrderDialogClose" OkLabel="Add">
+        <form>
+            <div class="form-floating">
+                <input type="text" class="form-control ordername" @bind="_orderdescription" placeholder="Order description" />
+                <label for="floatingInput">Order description</label>
+            </div>
+           
+
+           
+
+
+            @if (!string.IsNullOrEmpty(_addOrderErrorMessage))
+            {
+                <AlertMessage Type="danger" Message="@_addOrderErrorMessage" />
+            }
+        </form>
+    </ModalDialog>
+}
+
+@if (_showUpdateOrderDialog)
+{
+    <ModalDialog Title="Update Order" OnClose="@OnUpdateOrderDialogClose" OkLabel="Update">
+        <form>
+            <div class="form-floating">
+                <input type="text" class="form-control description" @bind="_updateOrder.Description" placeholder="Description" />
+                <label for="floatingInput">Ordername</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control price" @bind="_updateOrder.Price" placeholder="Price" />
+                <label for="floatingPrice">Price</label>
+            </div>
+
+            @if (!string.IsNullOrEmpty(_addOrderErrorMessage))
+            {
+                <AlertMessage Type="danger" Message="@_addOrderErrorMessage" />
+            }
+        </form>
+    </ModalDialog>
+}
+
+@if (_showItemDialog)
+{
+    <ModalDialog Title="Update Order" OnClose="@OnItemDialogClose" OkLabel="Update">
+        <form>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Coffee Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                   
+                    @foreach (var coffee in _coffees)
+                    {
+                        <tr>
+                            <td>@coffee.CoffeeName</td>
+
+                            <td>@coffee.Price.ToString()</td>
+                            <td>@coffee.Quantity</td>
+                            <td>
+                                <button class="btn btn-outline-danger" type="button" @onclick="()=>IncreaseQuantity(_eachOrder, coffee)">
+                                    <span class="oi oi-delete" /> Add
+                                </button>
+
+                                <button class="btn btn-outline-danger" type="button" @onclick="()=>DecreaseQuantity(_eachOrder, coffee)">
+                                    <span class="oi oi-delete" /> Less
+                                </button>
+                        </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!string.IsNullOrEmpty(_addOrderErrorMessage))
+            {
+                <AlertMessage Type="danger" Message="@_addOrderErrorMessage" />
+            }
+        </form>
+    </ModalDialog>
+}
+
+@if (_showAddInDialog)
+{
+    <ModalDialog Title="Update Order" OnClose="@OnAddInsDialogClose" OkLabel="Update">
+        <form>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>AddIns Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    @foreach (var addin in _addins)
+                    {
+                        <tr>
+                            <td>@addin.AddInsName</td>
+
+                            <td>@addin.Price.ToString()</td>
+                            <td>@addin.Quantity</td>
+                            <td>
+                                <button class="btn btn-outline-danger" type="button" @onclick="()=>IncreaseAddInQuantity(_eachOrder, addin)">
+                                    <span class="oi oi-delete" /> Add
+                                </button>
+
+                                <button class="btn btn-outline-danger" type="button" @onclick="()=>DecreaseAddInQuantity(_eachOrder, addin)">
+                                    <span class="oi oi-delete" /> Less
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!string.IsNullOrEmpty(_addOrderErrorMessage))
+            {
+                <AlertMessage Type="danger" Message="@_addOrderErrorMessage" />
+            }
+        </form>
+    </ModalDialog>
+}
+
+
+@if (_showDeleteOrderDialog)
+{
+    <ModalDialog Title="Delete Order" OnClose="@OnDeleteOrderDialogClose" OkLabel="Confirm">
+        <p>Are you sure you want to delete <strong>@_deleteOrder.Description</strong> Description and their data?</p>
+        @if (!string.IsNullOrEmpty(_deleteOrderErrorMessage))
+        {
+            <AlertMessage Type="danger" Message="@_deleteOrderErrorMessage" />
+        }
+    </ModalDialog>
+}
+
+@code {
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+    private List<Order> _orders { get; set; }
+    private bool _showAddOrderDialog { get; set; }
+    private bool _showDeleteOrderDialog { get; set; }
+    private string _addOrderErrorMessage { get; set; }
+    private string _deleteOrderErrorMessage { get; set; }
+    private Order _deleteOrder { get; set; }
+    private Order _eachOrder { get; set; }
+    private string _orderdescription { get; set; }
+    private float _price { get; set; }
+    private List<Coffee> _coffees { get; set; }
+    private List<AddIns> _addins { get; set; }
+    private bool _showUpdateOrderDialog { get; set; }
+    private string _updateOrderErrorMessage { get; set; }
+    private Order _updateOrder { get; set; }
+    private bool _showItemDialog { get; set; }
+    private bool _showAddInDialog { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _orders = OrderServices.GetAll();
+        _coffees = CoffeeService.GetAll();
+    }
+
+    private void OpenAddOrderDialog()
+    {
+        _showAddOrderDialog = true;
+        _orderdescription = "";
+        _price = 0;
+
+    }
+
+    private void OpenItemDialog(Order order)
+    {
+        _coffees = order.coffee;
+        _eachOrder = order;
+        _orders = OrderServices.GetAll();
+        _showItemDialog = true;
+
+
+    }
+
+    private void IncreaseQuantity(Order order, Coffee coffee)
+    {
+        order = OrderServices.IncreaseQuantity(order, coffee);
+        _orders = OrderServices.GetAll();
+        _coffees = order.coffee;
+    }
+
+    private void DecreaseQuantity(Order order, Coffee coffee)
+    {
+        
+        _coffees = OrderServices.DecreaseQuantity(order, coffee);
+        _orders = OrderServices.GetAll();
+    }
+
+    private void OnItemDialogClose()
+    {
+        _showItemDialog = false;
+        _orders = OrderServices.GetAll();
+
+    }
+
+    private void OpenAddInDialog(Order order)
+    {
+        _addins = order.addIns;
+        _eachOrder = order;
+        _showAddInDialog = true;
+        _orders = OrderServices.GetAll();
+
+    }
+
+    private void IncreaseAddInQuantity(Order order, AddIns addIns)
+    {
+        _addins = OrderServices.IncreaseAddInQuantity(order, addIns);
+        _orders = OrderServices.GetAll();
+    }
+
+    private void DecreaseAddInQuantity(Order order, AddIns addIns)
+    {
+
+        _addins = OrderServices.DecreaseAddInQuantity(order, addIns);
+        _orders = OrderServices.GetAll();
+    }
+
+    private void OnAddInsDialogClose()
+    {
+        _showAddInDialog = false;
+        _orders = OrderServices.GetAll();
+
+    }
+
+    private void OnAddOrderDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+
+            _showAddOrderDialog = false;
+        }
+        else
+        {
+            try
+            {
+                _coffees = CoffeeService.GetAll();
+                _addins = AddInsService.GetAll();
+                _addOrderErrorMessage = "";
+                _orders = OrderServices.Create(_orderdescription, _coffees, _addins);
+               
+                _showAddOrderDialog = false;
+
+            }
+            catch (Exception e)
+            {
+                _addOrderErrorMessage = e.Message;
+            }
+        }
+    }
+
+
+    private void OpenDeleteOrderDialog(Order order)
+    {
+        _deleteOrder = order;
+        _showDeleteOrderDialog = true;
+    }
+    private void OnDeleteOrderDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+
+            _showDeleteOrderDialog = false;
+            _deleteOrder = null;
+        }
+        else
+        {
+            try
+            {
+                _deleteOrderErrorMessage = "";
+                _orders = OrderServices.Delete(_deleteOrder.Id);
+                _showDeleteOrderDialog = false;
+                _deleteOrder = null;
+            }
+            catch (Exception e)
+            {
+                _deleteOrderErrorMessage = e.Message;
+            }
+        }
+
+    }
+    private void OpenUpdateOrderDialog(Order order)
+    {
+        _showUpdateOrderDialog = true;
+        _updateOrder = order;
+    }
+
+
+    private void OnUpdateOrderDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+
+            _showUpdateOrderDialog = false;
+        }
+        else
+        {
+            try
+            {
+                _updateOrderErrorMessage = "";
+                _orders = OrderServices.Update(_updateOrder.Description, _updateOrder.Price);
+                _showUpdateOrderDialog = false;
+            }
+            catch (Exception e)
+            {
+                _updateOrderErrorMessage = e.Message;
+            }
+        }
+    }
+}
